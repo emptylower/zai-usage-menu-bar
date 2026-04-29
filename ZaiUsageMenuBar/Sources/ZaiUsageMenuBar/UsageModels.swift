@@ -110,7 +110,7 @@ struct AccountConfig: Codable, Identifiable, Hashable {
     }
 }
 
-enum HourlyRange {
+enum HourlyRange: Equatable {
     case today(referenceDate: Date)
     case last24h
 

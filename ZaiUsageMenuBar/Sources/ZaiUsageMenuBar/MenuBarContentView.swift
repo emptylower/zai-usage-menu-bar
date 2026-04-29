@@ -194,6 +194,15 @@ struct AccountSectionView: View {
 
     private var accentColor: Color { accountColor(for: colorIndex) }
 
+    private func refreshHourlyRange() {
+        switch hourlyRange {
+        case .today:
+            hourlyRange = .today(referenceDate: Date())
+        case .last24h:
+            break
+        }
+    }
+
     private var ringPercentageValue: Double? {
         UsageAggregation.ringPercentage(from: result.usage?.quotaLimits)
     }
@@ -276,6 +285,9 @@ struct AccountSectionView: View {
         }
         .background(Color.primary.opacity(0.08))
         .cornerRadius(10)
+        .onChange(of: result.usage?.lastUpdated) {
+            refreshHourlyRange()
+        }
     }
 }
 
