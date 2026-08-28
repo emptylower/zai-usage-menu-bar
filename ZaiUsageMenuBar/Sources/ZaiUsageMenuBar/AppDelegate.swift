@@ -76,6 +76,17 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         popover.performClose(sender)
     }
 
+    private var popoverHasAttachedSheet: Bool {
+        popover.contentViewController?.view.window?.attachedSheet != nil
+    }
+
+    // Consulted by both performClose and AppKit's transient dismissal.
+    // While the settings sheet is up, the popover must behave like a modal
+    // host; closing it would orphan the sheet and wedge the panel.
+    func popoverShouldClose(_ popover: NSPopover) -> Bool {
+        return !popoverHasAttachedSheet
+    }
+
     // Single teardown path for every way the popover closes (button, transient,
     // monitor, resign-active).
     func popoverDidClose(_ notification: Notification) {
@@ -83,7 +94,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     }
 
     func applicationDidResignActive(_ notification: Notification) {
-        if popover.isShown {
+        if popover.isShown && !popoverHasAttachedSheet {
             hidePopover(nil)
         }
     }
@@ -91,7 +102,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     private func installDismissMonitors() {
         removeDismissMonitors()
         globalDismissMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
-            guard let self, self.popover.isShown else { return }
+            guard let self, self.popover.isShown, !self.popoverHasAttachedSheet else { return }
             // A click on our own status item must keep its toggle semantics;
             // on macOS 26 status items are hosted out-of-process, so it may
             // surface here as a "global" event.
@@ -102,7 +113,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
             self.hidePopover(nil)
         }
         localKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            guard let self, self.popover.isShown, event.keyCode == 53 else { return event }
+            guard let self, self.popover.isShown, event.keyCode == 53,
+                  !self.popoverHasAttachedSheet else { return event }
             self.hidePopover(nil)
             return nil
         }
