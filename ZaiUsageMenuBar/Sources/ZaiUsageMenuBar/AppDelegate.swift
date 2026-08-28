@@ -91,6 +91,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     // monitor, resign-active).
     func popoverDidClose(_ notification: Notification) {
         removeDismissMonitors()
+        // Heal any presentation state that would otherwise survive the close
+        // (e.g. the settings sheet) and wedge the next show.
+        NotificationCenter.default.post(name: .popoverDidCloseNotification, object: nil)
     }
 
     func applicationDidResignActive(_ notification: Notification) {
@@ -151,4 +154,5 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
 
 extension Notification.Name {
     static let refreshUsage = Notification.Name("refreshUsage")
+    static let popoverDidCloseNotification = Notification.Name("popoverDidCloseNotification")
 }
