@@ -122,13 +122,13 @@ struct HeaderView: View {
             .help(L10n.localized("settings"))
 
             Button {
-                NSApp.terminate(nil)
+                AppDelegate.shared?.hidePopover(nil)
             } label: {
                 Image(systemName: "xmark.circle")
                     .font(.system(size: 12))
             }
             .buttonStyle(.plain)
-            .help(L10n.localized("quit"))
+            .help(L10n.localized("close"))
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
