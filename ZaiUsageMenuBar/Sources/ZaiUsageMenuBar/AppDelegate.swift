@@ -65,7 +65,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
         // LSUIElement app is never active on its own; without activation the
         // popover can't become key and .transient dismissal is dead on macOS 26.
-        NSApp.activate()
+        // Plain NSApp.activate() is a no-op without a prior user interaction, so
+        // force it through NSRunningApplication (plan risk #1 fallback).
+        NSRunningApplication.current.activate(options: [.activateIgnoringOtherApps])
         popover.contentViewController?.view.window?.makeKey()
         installDismissMonitors()
     }
