@@ -58,7 +58,7 @@ struct SettingsView: View {
                         }
                     }
                 }
-                .scrollIndicators(.hidden)
+                .scrollIndicators(.never)
             }
 
             Spacer()
