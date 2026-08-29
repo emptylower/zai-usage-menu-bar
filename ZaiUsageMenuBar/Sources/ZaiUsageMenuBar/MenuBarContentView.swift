@@ -36,6 +36,7 @@ struct MenuBarContentView: View {
                 .padding(.horizontal, 8)
                 .padding(.bottom, 6)
             }
+            .scrollIndicators(.hidden)
         }
         .frame(width: 300)
         .onAppear {
