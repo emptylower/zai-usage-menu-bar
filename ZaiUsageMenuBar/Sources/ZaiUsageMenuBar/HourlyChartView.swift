@@ -8,6 +8,7 @@ struct HourlyChartView: View {
 
     @State private var isExpanded = true
     @State private var hoveredBarIndex: Int? = nil
+    @State private var tooltipSize: CGSize = .zero
 
     private let barHeight: CGFloat = 60
     private let barGap: CGFloat = 2
@@ -59,14 +60,25 @@ struct HourlyChartView: View {
                                     .onHover { hovering in
                                         hoveredBarIndex = hovering ? index : nil
                                     }
-                                    .overlay(alignment: .bottom) {
-                                        if hoveredBarIndex == index {
-                                            tooltipOverlay(bar: bar)
-                                        }
-                                    }
                                 }
                             }
                             .frame(height: barHeight)
+                            .overlay(alignment: .topLeading) {
+                                if let index = hoveredBarIndex, let bar = bars[safe: index] {
+                                    let barCenterX = CGFloat(index) * (barWidth + barGap) + barWidth / 2
+                                    let halfWidth = tooltipSize.width / 2
+                                    let clampedCenterX = min(max(barCenterX, halfWidth), geometry.size.width - halfWidth)
+                                    tooltipOverlay(bar: bar)
+                                        .background(
+                                            GeometryReader { tipGeometry in
+                                                Color.clear.preference(key: TooltipSizeKey.self, value: tipGeometry.size)
+                                            }
+                                        )
+                                        .offset(x: clampedCenterX - halfWidth, y: -(tooltipSize.height + 8))
+                                        .allowsHitTesting(false)
+                                }
+                            }
+                            .onPreferenceChange(TooltipSizeKey.self) { tooltipSize = $0 }
                         }
                         .frame(height: barHeight)
 
@@ -149,7 +161,6 @@ struct HourlyChartView: View {
         .background(.ultraThinMaterial)
         .cornerRadius(6)
         .shadow(color: .black.opacity(0.2), radius: 4, y: 2)
-        .offset(y: -barHeight - 8)
     }
 
     private var legend: some View {
@@ -196,6 +207,13 @@ struct HourlyChartView: View {
     private func colorForModel(_ name: String) -> Color {
         let index = modelNames.firstIndex(of: name) ?? 0
         return accountColorPalette[index % accountColorPalette.count]
+    }
+}
+
+private struct TooltipSizeKey: PreferenceKey {
+    static var defaultValue: CGSize = .zero
+    static func reduce(value: inout CGSize, nextValue: () -> CGSize) {
+        value = nextValue()
     }
 }
 
